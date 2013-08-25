@@ -1,0 +1,7 @@
+TODO
+
+interface to soft margin SVM solver.
+
+2013.8.26
+
+hardCompareLP and hardCompareQP with examples on separable data.

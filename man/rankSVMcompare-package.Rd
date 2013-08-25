@@ -12,7 +12,8 @@ Maintainer: \tab Toby Dylan Hocking <toby@sg.cs.titech.ac.jp>\cr
 Author: \tab Toby Dylan Hocking\cr
 Version: \tab 2013.8.24\cr
 License: \tab GPL-3\cr
-Title: \tab Support vector machines for ranking and comparing\cr}
+Title: \tab Support vector machines for ranking and comparing\cr
+Depends: \tab quadmod\cr}
 }
 \author{Toby Dylan Hocking}
 
