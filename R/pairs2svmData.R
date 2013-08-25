@@ -6,7 +6,7 @@
 ### of the resulting scaled, flipped, augmented feature
 ### matrices. \item We map 0 -> -1 in the resulting label vector,
 ### creating an integer vector with elements in c(-1,1).}
-pairs2svmData <- function(Pairs){
+pairs2svmData <- structure(function(Pairs){
   check.pairs(Pairs)
   ## First make scaled input features Zi, Zip.
   scaled <- with(Pairs, scale(rbind(Xi, Xip)))
@@ -31,4 +31,14 @@ pairs2svmData <- function(Pairs){
        features=X, ##<< inputs: feature difference matrix Xip-Xi.
        labels=svm.y) ##<< outputs: -1 -> 1, 0 -> -1, 1 -> 1.
   ##end<<
-}
+},ex=function(){
+  p <- list(Xi=rbind(3,0,1),
+            Xip=rbind(0,-2,0),
+            yi=as.integer(c(-1,1,0)))
+  result <- pairs2svmData(p)
+  ## Inequality pairs such that yi=1 or -1 are mapped to 1, and
+  ## equality pairs such that yi=0 are duplicated and mapped to -1.
+  stopifnot(result$labels == c(1,1,-1,-1))
+  ## The duplicate equality features are multiplied by -1.
+  stopifnot(result$features[3]*-1 == result$features[4])
+})

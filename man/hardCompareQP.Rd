@@ -5,7 +5,7 @@
 linearly separable data. We first normalize the data using
 \code{\link{pairs2svmData}}, resulting in a scaled n x p feature
 difference matrix X, with a new vector of comparisons y in
-c(-1,1). We then define the linear kernel matrix K=DD' and solve
+c(-1,1). We then define the linear kernel matrix K=XX' and solve
 the dual quadratic program (QP) of SVM: \eqn{\min_{\alpha\in R^n}
 \alpha' K \alpha/2 - y'\alpha} subject to for all i, \eqn{y_i
 \alpha_i \ge 0}. The learned function in the scaled binary SVM
