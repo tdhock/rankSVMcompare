@@ -10,7 +10,7 @@ with labels yi in c(-1,1) for ranking and c(-1,0,1) for comparing.}
 \tabular{ll}{Package: \tab rankSVMcompare\cr
 Maintainer: \tab Toby Dylan Hocking <toby@sg.cs.titech.ac.jp>\cr
 Author: \tab Toby Dylan Hocking\cr
-Version: \tab 2013.8.24\cr
+Version: \tab 2013.8.26\cr
 License: \tab GPL-3\cr
 Title: \tab Support vector machines for ranking and comparing\cr
 Depends: \tab quadmod\cr}

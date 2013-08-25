@@ -218,9 +218,12 @@ hardCompareQP <- structure(function
   y.hat2 <- ifelse(fxdiff < -1, -1L,
                    ifelse(fxdiff > 1, 1L, 0L))
   stopifnot(y.hat == y.hat2)
+  ## difference vectors and support vectors to plot.
+  point.df <- with(separable, data.frame(Xip-Xi, yi))
+  sv.df <- with(sol$sv, data.frame(t(t(X)*sol$sigma)))
   ## calc svm decision boundary and margin.
   mu <- sol$margin
-  arange <- range(diffs$angle)
+  arange <- range(point.df$angle)
   seg <- function(v, line){
     d <- (v-sol$weight[2]*arange)/sol$weight[1]
     data.frame(t(c(distance=d, angle=arange)), line)
@@ -231,9 +234,6 @@ hardCompareQP <- structure(function
                   seg(-1+mu,"margin"),
                   seg(1,"decision"),
                   seg(-1,"decision"))
-  point.df <- with(separable, data.frame(Xip-Xi, yi))
-  sv.df <- with(sol$sv, data.frame(t(t(X)*sol$sigma)))
-
   library(ggplot2)
   svplot <- ggplot()+
   geom_point(aes(distance,angle,colour=factor(yi)), data=point.df,
@@ -241,7 +241,9 @@ hardCompareQP <- structure(function
   geom_point(aes(distance,angle), data=sv.df,size=1.5)+
   geom_segment(aes(distance1,angle1,xend=distance2,yend=angle2,
                    linetype=line),data=seg.df)+
-  scale_linetype_manual(values=c(decision="solid",margin="dotted"))
+  scale_linetype_manual(values=c(decision="solid",margin="dotted"))+
+  ggtitle(paste("Hard margin linear kernel comparison model",
+                "support vectors in black",sep="\n"))
   print(svplot)
 })
 
