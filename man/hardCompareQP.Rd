@@ -13,14 +13,14 @@ and solve the dual problem of linear kernel SVM:
 \eqn{\min_{\alpha\in R^n} \alpha' K \alpha/2 - v'\alpha}
 subject to for all i, \eqn{v_i \alpha_i \ge 0}. K is the linear
 kernel matrix DD'. The learned function in the scaled binary SVM
-space is \eqn{f(x) = b + \sum_{i\in\text{sv}} \alpha_i k(d_i, x)}
+space is \eqn{f(x) = b + \sum_{i\in sv} \alpha_i k(d_i, x)}
 where sv are the support vectors and the bias b is calculated
 using the average of \eqn{b = y_i - f(d_i)} over all support
 vectors i. The learned ranking function in the original space is
-\eqn{r(x) = \sum_{i\in\text{sv}} -\alpha_i/b k(d_i, Sx)} where S
+\eqn{r(x) = \sum_{i\in sv} -\alpha_i/b k(d_i, Sx)} where S
 is the diagonal scaling matrix of the input features. Since we use
 the linear kernel k, we can also write this function as \eqn{r(x)
-= w'x} with the weight vector \eqn{w = -S/b\sum_{i\in\text{sv}}
+= w'x} with the weight vector \eqn{w = -S/b\sum_{i\in sv}
 \alpha_i d_i}.}
 \usage{hardCompareQP(Pairs, add.to.diag = 1e-10, sv.threshold = 0.001)}
 \arguments{
