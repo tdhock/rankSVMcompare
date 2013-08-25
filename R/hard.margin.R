@@ -1,9 +1,9 @@
 hardCompareLP <- structure(function
 ### Fit a linear hard margin comparison model to linearly separable
-### data. The LP is max_{\eqn{\mu\in R}, \eqn{w\in R^p}}
-### mu subject to these constraints: \itemize{ \item for all i such
-### that \eqn{y_i=0}, \eqn{\mu \le 1-w'(x_i'-x_i)} and \eqn{\mu \le
-### 1+w'(x_i'-x_i)}. \item for all i such that \eqn{y_i\ne 0},
+### data. The linear program (LP) is max_{\eqn{\mu\in R}, \eqn{w\in
+### R^p}} mu subject to these constraints: \itemize{ \item for all i
+### such that \eqn{y_i=0}, \eqn{\mu \le 1-w'(x_i'-x_i)} and \eqn{\mu
+### \le 1+w'(x_i'-x_i)}. \item for all i such that \eqn{y_i\ne 0},
 ### \eqn{\mu \le -1 + w'(x_i'-x_i)y_i}.}
 (Pairs
 ### see \code{\link{check.pairs}}.
@@ -56,11 +56,11 @@ hardCompareLP <- structure(function
 ### Comparison model fit. You can do fit$rank(X) to get m numeric
 ### ranks for the rows of the m x p numeric matrix X. For two feature
 ### vectors xi and xip, we predict no significant difference if their
-### rank difference is less than 1. You can do fit$predict(Xi,Xip) to
-### get m predicted comparisons in c(-1,0,1), for m by p numeric
-### matrices Xi and Xip. Also, fit$weight is the optimal vector of p
-### numeric weights, and if fit$margin is positive then the data are
-### separable.
+### absolute rank difference is less than 1. You can do
+### fit$predict(Xi,Xip) to get m predicted comparisons in c(-1,0,1),
+### for m by p numeric matrices Xi and Xip. Also, fit$weight is the
+### optimal vector of p numeric weights, and if fit$margin is positive
+### then the data are separable.
 },ex=function(){
   data(separable)
   sol <- hardCompareLP(separable)
@@ -114,22 +114,22 @@ hardCompareQP <- structure(function
 ### input features: \enumerate{ \item centering and scaling. \item for
 ### all pairs i such that yi=-1, we flip Xi and Xip and set
 ### yi=1. \item for all pairs i such that yi=0, we generate new
-### features Xi=Xip and Xip=Xi. } This results in n x p normalized
-### feature matrices Z and Zp, with a new vector of comparisons yi in
-### c(0,1). We define vi=1 if yi=1 and -1 if yi=0. We then take D=Zp-Z
-### and solve the dual problem of linear kernel SVM:
-### \eqn{\min_{\alpha\in R^n} \alpha' K \alpha/2 - v'\alpha}
-### subject to for all i, \eqn{v_i \alpha_i \ge 0}. K is the linear
-### kernel matrix DD'. The learned function in the scaled binary SVM
-### space is \eqn{f(x) = b + \sum_{i\in sv} \alpha_i k(d_i, x)}
-### where sv are the support vectors and the bias b is calculated
-### using the average of \eqn{b = y_i - f(d_i)} over all support
-### vectors i. The learned ranking function in the original space is
-### \eqn{r(x) = \sum_{i\in sv} -\alpha_i/b k(d_i, Sx)} where S
-### is the diagonal scaling matrix of the input features. Since we use
-### the linear kernel k, we can also write this function as \eqn{r(x)
-### = w'x} with the weight vector \eqn{w = -S/b\sum_{i\in sv}
-### \alpha_i d_i}.
+### features Xi <- Xip and Xip <- Xi. } This results in n x p
+### normalized feature matrices Z and Zp, with a new vector of
+### comparisons yi in c(0,1). We define vi=1 if yi=1 and vi=-1 if
+### yi=0. We then take D=Zp-Z and solve the dual quadratic program
+### (QP) of linear kernel SVM: \eqn{\min_{\alpha\in R^n} \alpha' K
+### \alpha/2 - v'\alpha} subject to for all i, \eqn{v_i \alpha_i \ge
+### 0}. K is the linear kernel matrix DD'. The learned function in the
+### scaled binary SVM space is \eqn{f(x) = b + \sum_{i\in sv} \alpha_i
+### k(d_i, x)} where sv are the support vectors and the bias b is
+### calculated using the average of \eqn{b = y_i - f(d_i)} over all
+### support vectors i. The learned ranking function in the original
+### space is \eqn{r(x) = \sum_{i\in sv} -\alpha_i/b k(d_i, Sx)} where
+### S is the diagonal scaling matrix of the input features. Since we
+### use the linear kernel k, we can also write this function as
+### \eqn{r(x) = w'x} with the weight vector \eqn{w = -S/b \sum_{i\in
+### sv} \alpha_i d_i}.
 (Pairs,
 ### see \code{\link{check.pairs}}.
  add.to.diag=1e-10,
@@ -201,12 +201,13 @@ hardCompareQP <- structure(function
 ### Comparison model fit. You can do fit$rank(X) to get m numeric
 ### ranks for the rows of the m x p numeric matrix X. For two feature
 ### vectors xi and xip, we predict no significant difference if their
-### rank difference is less than 1. You can do fit$predict(Xi,Xip) to
-### get m predicted comparisons in c(-1,0,1), for m by p numeric
-### matrices Xi and Xip. Also, fit$sigma are the scales of the input
-### features, fit$sv are the support vectors (in the scaled space) and
-### fit$weight is the optimal weight vector (in the original space),
-### and if fit$margin is positive than the data are separable.
+### absolute rank difference is less than 1. You can do
+### fit$predict(Xi,Xip) to get m predicted comparisons in c(-1,0,1),
+### for m by p numeric matrices Xi and Xip. Also, fit$sigma are the
+### scales of the input features, fit$sv are the support vectors (in
+### the scaled space) and fit$weight is the optimal weight vector (in
+### the original space), and if fit$margin is positive than the data
+### are separable.
 },ex=function(){
   data(separable)
   sol <- hardCompareQP(separable)

@@ -2,10 +2,10 @@
 \alias{hardCompareLP}
 \title{hardCompareLP}
 \description{Fit a linear hard margin comparison model to linearly separable
-data. The LP is max_{\eqn{\mu\in R}, \eqn{w\in R^p}}
-mu subject to these constraints: \itemize{ \item for all i such
-that \eqn{y_i=0}, \eqn{\mu \le 1-w'(x_i'-x_i)} and \eqn{\mu \le
-1+w'(x_i'-x_i)}. \item for all i such that \eqn{y_i\ne 0},
+data. The linear program (LP) is max_{\eqn{\mu\in R}, \eqn{w\in
+R^p}} mu subject to these constraints: \itemize{ \item for all i
+such that \eqn{y_i=0}, \eqn{\mu \le 1-w'(x_i'-x_i)} and \eqn{\mu
+\le 1+w'(x_i'-x_i)}. \item for all i such that \eqn{y_i\ne 0},
 \eqn{\mu \le -1 + w'(x_i'-x_i)y_i}.}}
 \usage{hardCompareLP(Pairs)}
 \arguments{
@@ -15,11 +15,11 @@ that \eqn{y_i=0}, \eqn{\mu \le 1-w'(x_i'-x_i)} and \eqn{\mu \le
 \value{Comparison model fit. You can do fit$rank(X) to get m numeric
 ranks for the rows of the m x p numeric matrix X. For two feature
 vectors xi and xip, we predict no significant difference if their
-rank difference is less than 1. You can do fit$predict(Xi,Xip) to
-get m predicted comparisons in c(-1,0,1), for m by p numeric
-matrices Xi and Xip. Also, fit$weight is the optimal vector of p
-numeric weights, and if fit$margin is positive then the data are
-separable.}
+absolute rank difference is less than 1. You can do
+fit$predict(Xi,Xip) to get m predicted comparisons in c(-1,0,1),
+for m by p numeric matrices Xi and Xip. Also, fit$weight is the
+optimal vector of p numeric weights, and if fit$margin is positive
+then the data are separable.}
 
 \author{Toby Dylan Hocking}
 
