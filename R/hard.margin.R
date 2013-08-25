@@ -110,26 +110,22 @@ hardCompareLP <- structure(function
 
 hardCompareQP <- structure(function
 ### Fit a sparse linear kernel hard margin comparison model to
-### linearly separable data. We do three preprocessing steps on the
-### input features: \enumerate{ \item centering and scaling. \item for
-### all pairs i such that yi=-1, we flip Xi and Xip and set
-### yi=1. \item for all pairs i such that yi=0, we generate new
-### features Xi <- Xip and Xip <- Xi. } This results in n x p
-### normalized feature matrices Z and Zp, with a new vector of
-### comparisons yi in c(0,1). We define vi=1 if yi=1 and vi=-1 if
-### yi=0. We then take D=Zp-Z and solve the dual quadratic program
-### (QP) of linear kernel SVM: \eqn{\min_{\alpha\in R^n} \alpha' K
-### \alpha/2 - v'\alpha} subject to for all i, \eqn{v_i \alpha_i \ge
-### 0}. K is the linear kernel matrix DD'. The learned function in the
-### scaled binary SVM space is \eqn{f(x) = b + \sum_{i\in sv} \alpha_i
-### k(d_i, x)} where sv are the support vectors and the bias b is
-### calculated using the average of \eqn{b = y_i - f(d_i)} over all
-### support vectors i. The learned ranking function in the original
-### space is \eqn{r(x) = \sum_{i\in sv} -\alpha_i/b k(d_i, Sx)} where
-### S is the diagonal scaling matrix of the input features. Since we
-### use the linear kernel k, we can also write this function as
-### \eqn{r(x) = w'x} with the weight vector \eqn{w = -S/b \sum_{i\in
-### sv} \alpha_i d_i}.
+### linearly separable data. We first call pairs2svmData(Pairs),
+### resulting in n x p normalized feature matrices Z and Zp, with a
+### new vector of comparisons yi in c(0,1). We define vi=1 if yi=1 and
+### vi=-1 if yi=0. We then take D=Zp-Z and solve the dual quadratic
+### program (QP) of linear kernel SVM: \eqn{\min_{\alpha\in R^n}
+### \alpha' K \alpha/2 - v'\alpha} subject to for all i, \eqn{v_i
+### \alpha_i \ge 0}. K is the linear kernel matrix DD'. The learned
+### function in the scaled binary SVM space is \eqn{f(x) = b +
+### \sum_{i\in sv} \alpha_i k(d_i, x)} where sv are the support
+### vectors and the bias b is calculated using the average of \eqn{b =
+### y_i - f(d_i)} over all support vectors i. The learned ranking
+### function in the original space is \eqn{r(x) = \sum_{i\in sv}
+### -\alpha_i/b k(d_i, Sx)} where S is the diagonal scaling matrix of
+### the input features. Since we use the linear kernel k, we can also
+### write this function as \eqn{r(x) = w'x} with the weight vector
+### \eqn{w = -S/b \sum_{i\in sv} \alpha_i d_i}.
 (Pairs,
 ### see \code{\link{check.pairs}}.
  add.to.diag=1e-10,
@@ -139,40 +135,28 @@ hardCompareQP <- structure(function
 ### Optimal coefficients \eqn{\alpha_i} with absolute value greater
 ### than this value are considered support vectors.
  ){
-  check.pairs(Pairs)
-  ## First make scaled input features Zi, Zip.
-  scaled <- with(Pairs, scale(rbind(Xi, Xip)))
-  mu <- attr(scaled, "scaled:center")
-  sigma <- attr(scaled, "scaled:scale")
-  Zi <- scale(Pairs$Xi, mu, sigma)
-  Zip <- scale(Pairs$Xip, mu, sigma)
-  Di <- Zip - Zi
-  ## Then we put all nonzero y_i pairs on the y_i=1 side.
-  yi <- Pairs$yi
-  is.zero <- yi == 0
-  Di[!is.zero,] <- Di[!is.zero,] * yi[!is.zero]
-  yi[!is.zero] <- 1
-  ## And we duplicate the y_i=0 pairs, on the negative side.
-  Di.other <- Di
-  Di.other[is.zero,] <- -Di.other[is.zero,]
-  X <- rbind(Di,Di.other[is.zero,])
-  yi.both <- c(yi, rep(0, sum(is.zero)))
-  ## Finally we fit the linear hard margin SVM using a QP solver.
-  svm.y <- ifelse(yi.both==0, -1, 1)
+  svmData <- pairs2svmData(Pairs)
+  sigma <- svmData$scale
+  X <- svmData$features
+  y <- svmData$labels
   N <- nrow(X)
   P <- ncol(X)
+  ## Calculcate the linear kernel and add to diag to make sure it is
+  ## numerically positive definite.
   K <- X %*% t(X)
+  diag(K) <- diag(K) + add.to.diag
+  ## Construct the QP constraints using the quadmod modeling language.
   vars <- make.ids(alpha=N)
   constraints <-
-    c(vars$alpha[]*svm.y >= 0,
+    c(vars$alpha[]*y >= 0,
       list(sum(vars$alpha) == 0))
-  diag(K) <- diag(K) + add.to.diag
-  sol <- run.quadprog(vars, K, svm.y, constraints)
+  ## Fit the linear kernel hard margin SVM using a QP solver.
+  sol <- run.quadprog(vars, K, y, constraints)
   sol$sigma <- sigma
   is.sv <- abs(sol$alpha) > sv.threshold
   a.sv <- sol$alpha[is.sv]
   X.sv <- X[is.sv,]
-  y.sv <- svm.y[is.sv]
+  y.sv <- y[is.sv]
   sol$sv <- list(X=X.sv, a=a.sv, y=y.sv)
   sol$check <- function(X){
     stopifnot(ncol(X)==P)
