@@ -16,6 +16,7 @@ creating an integer vector with elements in c(-1,1).}}
 }
 
 \value{data suitable for plugging into an SVM solver:
+\item{center}{center of the input features.}
 \item{scale}{scale of input features.}
 \item{features}{inputs: feature difference matrix Xip-Xi.}
 \item{labels}{outputs: -1 -> 1, 0 -> -1, 1 -> 1.}}

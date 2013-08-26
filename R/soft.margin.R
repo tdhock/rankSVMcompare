@@ -1,10 +1,11 @@
 softCompareQP <- structure(function
-### Fit a soft-margin comparison model by using kernlab::ksvm (libsvm)
-### to solve the dual SVM problem. TODO: explain optimization problem.
+### Fit a soft-margin comparison model by using \code{\link{ksvm}}
+### (libsvm) to solve the dual SVM problem. TODO: explain optimization
+### problem.
 (Pairs,
 ### see \code{\link{check.pairs}}.
  ...
-### Passed to ksvm.
+### Passed to \code{\link{ksvm}}.
  ){
   res <- pairs2svmData(Pairs)
   X <- res$features
@@ -13,18 +14,6 @@ softCompareQP <- structure(function
   diff.df <- data.frame(X, y)
   fit <- ksvm(X, y, type="C-svc", scaled=FALSE, ...)
   res$ksvm <- fit
-  ## Make a grid and evaluate the learned fun on it.
-  ## g.args <- list()
-  ## for(name in colnames(X)){
-  ##   x <- X[,name]
-  ##   g.args[[name]] <- seq(min(x),max(x),l=20)
-  ## }
-  ## g <- do.call(expand.grid, g.args)
-  ## g.unscaled <- t(t(g) * res$scale)
-  ## f.svm <- predict(fit, g, type="decision")
-  ## f.rank <- f.svm/fit@b+1
-  ## res$grid.scaled <- data.frame(g, f.svm, f.rank)
-  ## res$grid.unscaled <- data.frame(g.unscaled, f.svm, f.rank)
   res$sv <- list(X=fit@xmatrix[[1]],
                  a=fit@coef[[1]])
   res$weight.svm <- with(res$sv, colSums(X * a))
@@ -91,20 +80,15 @@ softCompareQP <- structure(function
   })
   X.grid$f <- fit$rank(as.matrix(X.grid))
   library(directlabels)
-  p <- ggplot()+
+  pmodel <- p+
     geom_contour(aes(distance, angle, z=f), size=1.5,
                  data=X.grid, colour="grey")+
     geom_dl(aes(distance, angle, z=f, label=..level..), colour="grey",
             data=X.grid, method="bottom.pieces", stat="contour")+
-    ## geom_contour(aes(distance, angle, z=f.rank),
-    ##              data=fit$grid.unscaled, colour="grey")+
-    ## geom_dl(aes(distance, angle, z=f.rank, label=..level..), colour="grey",
-    ##         data=fit$grid.unscaled, method="bottom.pieces", stat="contour")+
-    geom_point(aes(distance, angle, colour=factor(yi)), data=point.df)+
     geom_segment(aes(distance1,angle1,xend=distance2,yend=angle2,
                      linetype=line),data=seg.df)+
     geom_point(aes(distance, angle, shape=sv.type), data=sv.df)+
     scale_linetype_manual(values=c(margin="dashed",decision="solid"))+
     scale_shape_manual(values=c(margin=13,error=3))
-  print(p)
+  print(pmodel)
 })
