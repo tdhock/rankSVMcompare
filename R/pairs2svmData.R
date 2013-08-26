@@ -27,7 +27,8 @@ pairs2svmData <- structure(function(Pairs){
   yi.both <- c(yi, rep(0, sum(is.zero)))
   svm.y <- ifelse(yi.both==0, -1, 1)
   ##value<< data suitable for plugging into an SVM solver:
-  list(scale=sigma, ##<< scale of input features.
+  list(center=mu, ##<< center of the input features.
+       scale=sigma, ##<< scale of input features.
        features=X, ##<< inputs: feature difference matrix Xip-Xi.
        labels=svm.y) ##<< outputs: -1 -> 1, 0 -> -1, 1 -> 1.
   ##end<<
