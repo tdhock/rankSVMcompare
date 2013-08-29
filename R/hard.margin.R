@@ -136,8 +136,8 @@ hardCompareQP <- structure(function
  ){
   svmData <- pairs2svmData(Pairs)
   sigma <- svmData$scale
-  X <- svmData$features
-  y <- svmData$labels
+  X <- with(svmData, Xip-Xi)
+  y <- svmData$yi
   N <- nrow(X)
   P <- ncol(X)
   ## Calculcate the linear kernel and add to diag to make sure it is

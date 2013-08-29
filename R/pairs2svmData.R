@@ -12,25 +12,27 @@ pairs2svmData <- structure(function(Pairs){
   scaled <- with(Pairs, scale(rbind(Xi, Xip)))
   mu <- attr(scaled, "scaled:center")
   sigma <- attr(scaled, "scaled:scale")
-  Zi <- scale(Pairs$Xi, mu, sigma)
-  Zip <- scale(Pairs$Xip, mu, sigma)
-  Di <- Zip - Zi
+  Xi <- scale(Pairs$Xi, mu, sigma)
+  Xip <- scale(Pairs$Xip, mu, sigma)
   ## Then we put all nonzero y_i pairs on the y_i=1 side.
   yi <- Pairs$yi
-  is.zero <- yi == 0
-  Di[!is.zero,] <- Di[!is.zero,] * yi[!is.zero]
-  yi[!is.zero] <- 1
+  flip <- yi == -1
+  tmp <- Xip[flip,]
+  Xip[flip,] <- Xi[flip,]
+  Xi[flip,] <- tmp
+  yi[flip] <- 1
   ## And we duplicate the y_i=0 pairs, on the negative side.
-  Di.other <- Di
-  Di.other[is.zero,] <- -Di.other[is.zero,]
-  X <- rbind(Di,Di.other[is.zero,])
-  yi.both <- c(yi, rep(0, sum(is.zero)))
-  svm.y <- ifelse(yi.both==0, -1, 1)
+  zero <- which(yi == 0)
+  Xi <- rbind(Xi, Xip[zero,])
+  Xip <- rbind(Xip, Xi[zero,])
+  yi <- c(yi, rep(0, length(zero)))
+  yi <- ifelse(yi==0, -1L, 1L)
   ##value<< data suitable for plugging into an SVM solver:
   list(center=mu, ##<< center of the input features.
        scale=sigma, ##<< scale of input features.
-       features=X, ##<< inputs: feature difference matrix Xip-Xi.
-       labels=svm.y) ##<< outputs: -1 -> 1, 0 -> -1, 1 -> 1.
+       Xi=Xi, ##<< inputs feature matrix.
+       Xip=Xip, ##<< inputs feature matrix.
+       yi=yi) ##<< outputs -1 -> 1, 0 -> -1, 1 -> 1.
   ##end<<
 },ex=function(){
   p <- list(Xi=rbind(3,0,1),
@@ -40,6 +42,7 @@ pairs2svmData <- structure(function(Pairs){
   ## Inequality pairs such that yi=1 or -1 are mapped to 1, and
   ## equality pairs such that yi=0 are duplicated and mapped to -1.
   stopifnot(result$labels == c(1,1,-1,-1))
-  ## The duplicate equality features are multiplied by -1.
-  stopifnot(result$features[3]*-1 == result$features[4])
+  ## The duplicate equality features are flipped.
+  stopifnot(result$Xi[3]==result$Xip[4])
+  stopifnot(result$Xi[4]==result$Xip[3])
 })

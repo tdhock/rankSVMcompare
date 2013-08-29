@@ -18,8 +18,9 @@ creating an integer vector with elements in c(-1,1).}}
 \value{data suitable for plugging into an SVM solver:
 \item{center}{center of the input features.}
 \item{scale}{scale of input features.}
-\item{features}{inputs: feature difference matrix Xip-Xi.}
-\item{labels}{outputs: -1 -> 1, 0 -> -1, 1 -> 1.}}
+\item{Xi}{inputs feature matrix.}
+\item{Xip}{inputs feature matrix.}
+\item{yi}{outputs -1 -> 1, 0 -> -1, 1 -> 1.}}
 
 \author{Toby Dylan Hocking}
 
@@ -34,6 +35,7 @@ result <- pairs2svmData(p)
 ## Inequality pairs such that yi=1 or -1 are mapped to 1, and
 ## equality pairs such that yi=0 are duplicated and mapped to -1.
 stopifnot(result$labels == c(1,1,-1,-1))
-## The duplicate equality features are multiplied by -1.
-stopifnot(result$features[3]*-1 == result$features[4])
+## The duplicate equality features are flipped.
+stopifnot(result$Xi[3]==result$Xip[4])
+stopifnot(result$Xi[4]==result$Xip[3])
 }

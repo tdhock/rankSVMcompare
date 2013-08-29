@@ -2,6 +2,10 @@ TODO
 
 softRankQP interface to kernlab libsvm solver?
 
+2013.8.29
+
+nonlinear/kernelized functions using kernlab, plus examples.
+
 2013.8.26
 
 softCompareQP interface to kernlab libsvm solver.

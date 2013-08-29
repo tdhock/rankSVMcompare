@@ -4,45 +4,62 @@ softCompareQP <- structure(function
 ### problem.
 (Pairs,
 ### see \code{\link{check.pairs}}.
+ kernel=rbfdot(sigma=1),
+### Kernel function, see \code{\link{dots}}.
  ...
 ### Passed to \code{\link{ksvm}}.
  ){
+  if(is.character(kernel)){
+    kernel <- get(kernel)
+  }
+  stopifnot(is.function(kernel))
+  if(!inherits(kernel,"kernel")){
+    kernel <- kernel()
+  }
+  stopifnot(inherits(kernel,"kernel"))
   res <- pairs2svmData(Pairs)
-  X <- res$features
-  P <- ncol(X)
-  y <- res$labels
-  diff.df <- data.frame(X, y)
-  fit <- ksvm(X, y, type="C-svc", scaled=FALSE, ...)
+  res$kernel <- kernel
+  X.all <- with(res, rbind(Xi, Xip))
+  K2n <- kernelMatrix(kernel, X.all)
+  P <- ncol(X.all)
+  N <- nrow(res$Xi)
+  M <- rbind(diag(rep(-1,N)),diag(rep(1,N)))
+  Kn <- as.kernelMatrix(t(M) %*% K2n %*% M)
+  fit <- ksvm(Kn, res$yi, type="C-svc", kernel=kernel, ...)
   res$ksvm <- fit
-  res$sv <- list(X=fit@xmatrix[[1]],
-                 a=fit@coef[[1]])
-  res$weight.svm <- with(res$sv, colSums(X * a))
+  dual.var.times.y <- rep(0, N)
+  dual.var.times.y[fit@SVindex] <- fit@coef[[1]]
+  res$primal <- M %*% dual.var.times.y
+  is.sv <- res$primal!=0
+  res$sv <- list(X=X.all[is.sv,],
+                 a=res$primal[is.sv])
+  ## the margin and weight vector only make sense in the linear case.
   res$margin <- 1/fit@b # not negative here, since f(x)=sum_i a_i x_i - b.
+  weight.svm <- with(res$sv, colSums(X*a))
   res$weight <- with(res, margin*weight.svm/res$scale)
   res$check <- function(X){
     stopifnot(ncol(X)==P)
     stopifnot(is.matrix(X))
     stopifnot(is.numeric(X))
   }
+  res$svm.f <- function(X){
+    res$check(X)
+    kernelMult(kernel, X, res$sv$X, res$sv$a)-fit@b
+  }
+  res$rank.scaled <- function(X){
+    res$check(X)
+    kernelMult(kernel, X, res$sv$X, res$sv$a/fit@b)
+  }
   res$rank <- function(X){
     res$check(X)
-    X.sc <- t(t(X)/res$scale)
-    f.svm <- predict(fit, X.sc, type="decision")
-    f2 <- predict(fit, -X.sc, type="decision")
-    ##TODO: FIX! This works for the linear but nonlinear case!
-    (f.svm-f2)/res$gamma
+    X.sc <- scale(X, res$center, res$scale)
+    res$rank.scaled(X.sc)
   }
-  ## Find the optimal nonlinear scaling, via grid search?
-  ## thresh <- function(x)ifelse(x < -1, 1L, ifelse(x > 1, 1L, -1L))
-  ##table(thresh(res$rank(X)), sign(predict(fit, X, type="decision")))
-  res$gamma <- fit@b*2
   res$predict <- function(Xi, Xip){
     for(X in list(Xi, Xip)){
       res$check(X)
     }
-    D <- Xip-Xi
-    ## TODO: fix, check what makes sense here for the nonlinear case!
-    rank.diff <- res$rank(D)
+    rank.diff <- res$rank(Xip)-res$rank(Xi)
     ifelse(rank.diff < -1, -1L,
            ifelse(rank.diff > 1, 1L, 0L))
   }
@@ -56,22 +73,45 @@ softCompareQP <- structure(function
     not[[name]][,"distance"] <-
       not[[name]][,"distance"]+rnorm(nrow(not$Xi),sd=50)
   }
-  point.df <- with(not, data.frame(Xip-Xi, yi))
+  arrow.df <- with(not, data.frame(Xi,Xip,yi))
   library(ggplot2)
-  p <- ggplot()+
-    geom_point(aes(distance, angle, colour=factor(yi)), data=point.df)
-  print(p)
+  library(grid)
+  ## This is the pattern in the training data.
+  arrowPlot <- ggplot(,aes(distance, angle))+
+    geom_segment(aes(xend=distance.1, yend=angle.1),
+                 data=subset(arrow.df,yi==0))+
+    geom_segment(aes(xend=distance.1, yend=angle.1),
+                 data=subset(arrow.df,yi!=0),arrow=arrow())+
+    facet_grid(.~yi)+
+    theme_bw()+
+    theme(panel.margin=unit(0,"cm"))
+  print(arrowPlot)
   g.size <- 20
-  X.grid <- as.matrix(with(point.df, {
-    expand.grid(distance=seq(min(distance), max(distance), l=g.size),
-                angle=seq(min(angle), max(angle), l=g.size))
-  }))
-  ## Fit 3 soft-margin linear comparison models.
-  grid.df <- data.frame()
+  d <- with(arrow.df, range(c(distance, distance.1)))
+  a <- with(arrow.df, range(c(angle, angle.1)))
+  X.grid <- as.matrix(
+    expand.grid(distance=seq(d[1], d[2], l=g.size),
+                angle=seq(a[1], a[2], l=g.size))
+              )
+  ## Fit some soft-margin linear comparison models.
+  unscaledGrid <- data.frame()
+  scaledGrid <- data.frame()
   seg.df <- data.frame()
   sv.df <- data.frame()
-  for(cost in c(0.01, 1, 100)){
+  for(cost in c(0.01, 1)){
     fit <- softCompareQP(not, kernel="vanilladot", C=cost)
+    point.df <- with(fit, data.frame(Xip-Xi, yi))
+    d <- range(point.df$distance)
+    a <- range(point.df$angle)
+    sc.grid <- as.matrix(expand.grid(distance=seq(d[1],d[2],l=g.size),
+                                     angle=seq(a[1],a[2],l=g.size)))
+    outputs <- list(svm.f=fit$svm.f(sc.grid),
+                    rank=fit$rank.scaled(sc.grid))
+    for(fun.name in names(outputs)){
+      scaledGrid <- rbind(scaledGrid,{
+        data.frame(cost, sc.grid, value=outputs[[fun.name]], fun.name)
+      })
+    }
     mu <- fit$margin
     w <- fit$weight
     arange <- range(point.df$angle)
@@ -86,60 +126,65 @@ softCompareQP <- structure(function
                     seg(-1+mu,"margin"),
                     seg(1,"decision"),
                     seg(-1,"decision"))
+    dual.var <- fit$ksvm@coef[[1]]
     support.vectors <- with(fit, {
-      data.frame(t(t(sv$X)*fit$scale), cost,
-                 sv.type=ifelse(abs(sv$a)==max(sv$a),"slack","margin"))
+      data.frame((Xip-Xi)[ksvm@SVindex,], cost,
+                 sv.type=ifelse(abs(dual.var)==max(dual.var),"slack","margin"))
     })
     sv.df <- rbind(sv.df, support.vectors)
-    f <- fit$rank(X.grid)
-    grid.df <- rbind(grid.df, data.frame(X.grid, f, cost))
+    unscaledGrid <- rbind(unscaledGrid, {
+      data.frame(X.grid, rank=fit$rank(X.grid), cost)
+    })
   }
   library(directlabels)
-  library(grid)
-  pmodel <- p+
-    geom_contour(aes(distance, angle, z=f), size=1.5,
-                 data=grid.df, colour="grey")+
-    geom_dl(aes(distance, angle, z=f, label=..level..), colour="grey",
-            data=grid.df, method="bottom.pieces", stat="contour")+
-    geom_segment(aes(distance1,angle1,xend=distance2,yend=angle2,
-                     linetype=line),data=seg.df)+
-    geom_point(aes(distance, angle, shape=sv.type), data=sv.df)+
+  arrowContour <- arrowPlot+
+    geom_contour(aes(z=rank, colour=..level..), size=1.5, data=unscaledGrid)+
+    geom_dl(aes(z=rank, colour=..level.., label=..level..), 
+            data=unscaledGrid, method="bottom.pieces", stat="contour")+
+    facet_grid(cost~yi)
+  print(arrowContour)
+  ## Since we learned a linear comparison model we can also interpret
+  ## the model in the difference space.
+  brks <- c(-2,-1,0,1,2)
+  diffPlot <- ggplot()+
+    geom_point(aes(distance, angle, colour=factor(yi)), data=point.df)+
+    geom_contour(aes(distance, angle, z=value), size=1.5,
+                 data=scaledGrid, colour="grey", breaks=brks)+
+    geom_dl(aes(distance, angle, z=value, label=..level..), colour="grey",
+            data=scaledGrid, method="bottom.pieces",
+            breaks=brks, stat="contour")+
+    ## geom_segment(aes(distance1,angle1,xend=distance2,yend=angle2,
+    ##                  linetype=line),data=seg.df)+
+    geom_point(aes(distance, angle, shape=sv.type), data=sv.df,size=5)+
     scale_linetype_manual(values=c(margin="dashed",decision="solid"))+
     scale_shape_manual(values=c(margin=13,slack=3))+
-    facet_grid(.~cost,labeller=function(var, val){
-      sprintf("C = %s",as.character(val))
+    facet_grid(fun.name~cost,labeller=function(var, val){
+      if(var=="cost"){
+        sprintf("C = %s",as.character(val))
+      }else as.character(val)
     })+
     theme_bw()+
     theme(panel.margin=unit(0,"cm"))+
-    ggtitle("Support vector comparison model (black and grey level lines)")
-  print(pmodel)
-  ## Fit soft-margin non-linear comparison models for a 2 x 2 grid of
-  ## cost and kernel width parameters.
+    ggtitle("Support vector comparison model (grey level lines)")
+  print(diffPlot)
+  ## Fit soft-margin non-linear comparison models for some cost and
+  ## kernel width parameters.
   grid.df <- data.frame()
-  sv.df <- data.frame()
-  for(cost in c(0.01, 1, 100)){
+  for(cost in c(1)){
     for(sigma in c(1/2, 2)){
-      fit <- softCompareQP(not, kernel="rbfdot", C=cost, kpar=list(sigma=sigma))
-      support.vectors <- with(fit, {
-        data.frame(t(t(sv$X)*fit$scale), cost, sigma,
-                   sv.type=ifelse(abs(sv$a)==max(sv$a),"slack","margin"))
-      })
-      sv.df <- rbind(sv.df, support.vectors)
+      fit <- softCompareQP(not, kernel=rbfdot(sigma), C=cost)
       f <- fit$rank(X.grid)
       grid.df <- rbind(grid.df, data.frame(X.grid, f, cost, sigma))
     }
   }
   library(directlabels)
   library(grid)
-  nonlinear <- p+
+  nonlinear <- arrowPlot+
     geom_contour(aes(distance, angle, z=f), size=1.5,
                  data=grid.df, colour="grey")+
     geom_dl(aes(distance, angle, z=f, label=..level..), colour="grey",
             data=grid.df, method="bottom.pieces", stat="contour")+
-    geom_point(aes(distance, angle, shape=sv.type), data=sv.df)+
-    scale_linetype_manual(values=c(margin="dashed",decision="solid"))+
-    scale_shape_manual(values=c(margin=13,slack=3))+
-    facet_grid(sigma~cost,labeller=function(var, val){
+    facet_grid(sigma~yi,labeller=function(var, val){
       sprintf("%s = %s",var,as.character(val))
     })+
     theme_bw()+
