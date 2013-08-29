@@ -9,5 +9,6 @@ install.packages(c("devtools","kernlab","quadprog","lpSolveAPI",
 install.packages("quadmod",repos="http://r-forge.r-project.org")
 library(devtools)
 install_github("rankSVMcompare","tdhock")
+library(rankSVMcompare)
 example(softCompareQP)
 ```
