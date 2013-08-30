@@ -131,12 +131,29 @@ diffPlot <- ggplot()+
 print(diffPlot)
 ## Fit soft-margin non-linear comparison models for some cost and
 ## kernel width parameters.
+fold <- sample(rep(1:4, l=nrow(not$Xi)))
+set.ids <- list(train=1:2, validation=3, test=4)
+sets <- list()
+for(set.name in names(set.ids)){
+  i <- fold \%in\% set.ids[[set.name]]
+  sets[[set.name]] <- with(not, list(Xi=Xi[i,], Xip=Xip[i,], yi=yi[i]))
+}
 grid.df <- data.frame()
-for(cost in c(1)){
-  for(sigma in c(1/2, 2)){
-    fit <- softCompareQP(not, kernel=rbfdot(sigma), C=cost)
+err.df <- data.frame()
+model.i <- 1
+fits <- list()
+for(cost in c(0.1, 10)){
+  for(sigma in c(1/4, 4)){
+    fit <- softCompareQP(sets$train, kernel=rbfdot(sigma), C=cost)
+    fits[[model.i]] <- fit
+    yhat.vali <- with(sets$validation, fit$predict(Xi, Xip))
+    ## Error on the validation set used for model selection:
+    table(yhat.vali, sets$validation$yi)
+    err <- FpFnInv(yhat.vali, sets$validation$yi)
+    err.df <- rbind(err.df, data.frame(err, cost, sigma, model.i))
     f <- fit$rank(X.grid)
-    grid.df <- rbind(grid.df, data.frame(X.grid, f, cost, sigma))
+    grid.df <- rbind(grid.df, data.frame(X.grid, f, cost, sigma, model.i))
+    model.i <- model.i+1
   }
 }
 nonlinear <- arrowPlot+
@@ -144,14 +161,17 @@ nonlinear <- arrowPlot+
                data=grid.df, colour="grey")+
   geom_dl(aes(distance, angle, z=f, label=..level..), colour="grey",
           data=grid.df, method="bottom.pieces", stat="contour")+
-  facet_grid(sigma~yi,labeller=function(var, val){
+  facet_grid(model.i~yi,labeller=function(var, val){
     sprintf("\%s = \%s",var,as.character(val))
   })+
   theme_bw()+
   theme(panel.margin=unit(0,"cm"))+
   ggtitle("Support vector comparison model (grey level curves)")
 print(nonlinear)
-## In-sample prediction performance:
-table(not$yi, yhat=fit$predict(not$Xi,not$Xip))
-## TODO: out-of-sample prediction + model selection.
+## Model selection:
+fit <- fits[[which.min(err.df$error)]]
+## Out of sample prediction error:
+with(sets$test, table(labels=yi, predictions=fit$predict(Xi,Xip)))
+with(sets$test, FpFnInv(yi, fit$predict(Xi,Xip)))
+## With this setup, we have no prediction error!
 }
