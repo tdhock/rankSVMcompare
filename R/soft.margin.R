@@ -1,7 +1,19 @@
 softCompareQP <- structure(function
-### Fit a soft-margin comparison model by using \code{\link{ksvm}}
-### (libsvm) to solve the dual SVM problem. TODO: explain optimization
-### problem.
+### Fit a sparse kernel soft margin comparison model by using
+### \code{\link{ksvm}} to solve the SVM dual problem. We first
+### normalize the data using \code{\link{pairs2svmData}}, resulting in
+### scaled n x p feature matrices Xi and Xip, with a new vector of n
+### comparisons yi in c(-1,1). We then make the 2n x p matrix
+### X=rbind(Xi,Xip) and calculate its 2n x 2n kernel matrix K. We then
+### use \code{ksvm(M %*% K %*% t(M), yi)}, where the n x 2n matrix
+### M=[-In In], and In is the n x n identity matrix. The 2n primal
+### kernel coefficients are \code{a = t(M) %*% (yi*v)} where the n
+### dual variables v are obtained from the ksvm solver. For a scaled
+### p-vector x, the learned binary classification function is
+### \eqn{f(x)=b+\sum_{i=1}^n a_i K(x_i, x) + a_{n+i} K(x_i', x)} and
+### the learned ranking function is \eqn{r(x)=\sum_{i=1}^n -a_i/b
+### K(x_i, x) - a_{n+i}/b K(x_i', x)}, where the scalar intercept/bias
+### b is obtained from the ksvm solver.
 (Pairs,
 ### see \code{\link{check.pairs}}.
  kernel=rbfdot(sigma=1),
@@ -13,10 +25,11 @@ softCompareQP <- structure(function
     kernel <- get(kernel)
   }
   stopifnot(is.function(kernel))
-  if(!inherits(kernel,"kernel")){
+  is.kernel <- function(k)inherits(k,"kernel")
+  if(!is.kernel(kernel)){
     kernel <- kernel()
   }
-  stopifnot(inherits(kernel,"kernel"))
+  stopifnot(is.kernel(kernel))
   res <- pairs2svmData(Pairs)
   res$kernel <- kernel
   X.all <- with(res, rbind(Xi, Xip))
@@ -25,7 +38,7 @@ softCompareQP <- structure(function
   N <- nrow(res$Xi)
   M <- rbind(diag(rep(-1,N)),diag(rep(1,N)))
   Kn <- as.kernelMatrix(t(M) %*% K2n %*% M)
-  fit <- ksvm(Kn, res$yi, type="C-svc", kernel=kernel, ...)
+  fit <- ksvm(Kn, res$yi, type="C-svc", ...)
   res$ksvm <- fit
   dual.var.times.y <- rep(0, N)
   dual.var.times.y[fit@SVindex] <- fit@coef[[1]]
@@ -33,10 +46,6 @@ softCompareQP <- structure(function
   is.sv <- res$primal!=0
   res$sv <- list(X=X.all[is.sv,],
                  a=res$primal[is.sv])
-  ## the margin and weight vector only make sense in the linear case.
-  res$margin <- 1/fit@b # not negative here, since f(x)=sum_i a_i x_i - b.
-  weight.svm <- with(res$sv, colSums(X*a))
-  res$weight <- with(res, margin*weight.svm/res$scale)
   res$check <- function(X){
     stopifnot(ncol(X)==P)
     stopifnot(is.matrix(X))
@@ -56,14 +65,22 @@ softCompareQP <- structure(function
     res$rank.scaled(X.sc)
   }
   res$predict <- function(Xi, Xip){
-    for(X in list(Xi, Xip)){
-      res$check(X)
-    }
     rank.diff <- res$rank(Xip)-res$rank(Xi)
     ifelse(rank.diff < -1, -1L,
            ifelse(rank.diff > 1, 1L, 0L))
   }
   res
+### Comparison model fit. You can do fit$rank(X) to get m numeric
+### ranks for the rows of the unscaled m x p numeric matrix X. For two
+### feature vectors xi and xip, we predict no significant difference
+### if their absolute rank difference is less than 1. You can do
+### fit$predict(Xi,Xip) to get m predicted comparisons in c(-1,0,1),
+### for m by p numeric matrices Xi and Xip. Also, fit$scale and
+### fit$center are the centers and scales of the input features, and
+### fit$sv are the support vectors (in the scaled space). For a scaled
+### matrix X, fit$svm.f(X) gives the values of the learned binary
+### classification function f(x), and fit$rank.scaled(X) gives the
+### values of the ranking function r(x).
 },ex=function(){
   data(separable,package="rankSVMcompare")
   ## Add some noise to create a data set which is not separable.
@@ -105,27 +122,13 @@ softCompareQP <- structure(function
     a <- range(point.df$angle)
     sc.grid <- as.matrix(expand.grid(distance=seq(d[1],d[2],l=g.size),
                                      angle=seq(a[1],a[2],l=g.size)))
-    outputs <- list(svm.f=fit$svm.f(sc.grid),
-                    rank=fit$rank.scaled(sc.grid))
-    for(fun.name in names(outputs)){
+    for(fun.name in c("svm.f","rank.scaled")){
+      fun <- fit[[fun.name]]
+      value <- fun(sc.grid)
       scaledGrid <- rbind(scaledGrid,{
-        data.frame(cost, sc.grid, value=outputs[[fun.name]], fun.name)
+        data.frame(cost, sc.grid, value, fun.name)
       })
     }
-    mu <- fit$margin
-    w <- fit$weight
-    arange <- range(point.df$angle)
-    seg <- function(v, line){
-      d <- (v-w[2]*arange)/w[1]
-      data.frame(t(c(distance=d, angle=arange)), line, cost)
-    }
-    seg.df <- rbind(seg.df,
-                    seg(1-mu,"margin"),
-                    seg(1+mu,"margin"),
-                    seg(-1-mu,"margin"),
-                    seg(-1+mu,"margin"),
-                    seg(1,"decision"),
-                    seg(-1,"decision"))
     dual.var <- fit$ksvm@coef[[1]]
     support.vectors <- with(fit, {
       data.frame((Xip-Xi)[ksvm@SVindex,], cost,
@@ -177,8 +180,6 @@ softCompareQP <- structure(function
       grid.df <- rbind(grid.df, data.frame(X.grid, f, cost, sigma))
     }
   }
-  library(directlabels)
-  library(grid)
   nonlinear <- arrowPlot+
     geom_contour(aes(distance, angle, z=f), size=1.5,
                  data=grid.df, colour="grey")+
@@ -191,4 +192,7 @@ softCompareQP <- structure(function
     theme(panel.margin=unit(0,"cm"))+
     ggtitle("Support vector comparison model (grey level curves)")
   print(nonlinear)
+  ## In-sample prediction performance:
+  table(not$yi, yhat=fit$predict(not$Xi,not$Xip))
+  ## TODO: out-of-sample prediction + model selection.
 })

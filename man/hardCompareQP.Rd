@@ -1,7 +1,7 @@
 \name{hardCompareQP}
 \alias{hardCompareQP}
 \title{hardCompareQP}
-\description{Fit a sparse linear kernel hard margin comparison model to
+\description{Fit a sparse linear kernel hard margin SVM comparison model to
 linearly separable data. We first normalize the data using
 \code{\link{pairs2svmData}}, resulting in a scaled n x p feature
 difference matrix X, with a new vector of comparisons y in
