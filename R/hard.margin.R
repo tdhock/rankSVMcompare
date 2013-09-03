@@ -63,7 +63,6 @@ hardCompareLP <- structure(function
 ### optimal vector of p numeric weights, and if fit$margin is positive
 ### then the data are separable.
 },ex=function(){
-  require(quadmod)
   data(separable)
   sol <- hardCompareLP(separable)
   ## check to make sure we have perfect prediction.
@@ -136,6 +135,7 @@ hardCompareQP <- structure(function
 ### Optimal coefficients \eqn{\alpha_i} with absolute value greater
 ### than this value are considered support vectors.
  ){
+  require(quadmod)
   svmData <- pairs2svmData(Pairs)
   sigma <- svmData$scale
   X <- with(svmData, Xip-Xi)

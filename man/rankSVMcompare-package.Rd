@@ -13,7 +13,8 @@ Author: \tab Toby Dylan Hocking\cr
 Version: \tab 2013.9.3\cr
 License: \tab GPL-3\cr
 Title: \tab Support vector machines for ranking and comparing\cr
-Suggests: \tab ggplot2, directlabels, quadmod, kernlab\cr}
+Suggests: \tab ggplot2, directlabels, quadmod\cr
+Depends: \tab kernlab\cr}
 }
 \author{Toby Dylan Hocking}
 

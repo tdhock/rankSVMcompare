@@ -171,7 +171,7 @@ print(nonlinear)
 ## Model selection:
 fit <- fits[[which.min(err.df$error)]]
 ## Out of sample prediction error:
-test.yhat <- fit$predict(Xi,Xip)
+test.yhat <- with(sets$test, fit$predict(Xi,Xip))
 with(sets$test, table(labels=yi, predictions=test.yhat))
 with(sets$test, FpFnInv(yi, test.yhat))
 ## With this setup, we have no prediction error!

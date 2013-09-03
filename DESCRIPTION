@@ -7,4 +7,5 @@ Title: Support vector machines for ranking and comparing
 Description: Solvers for ranking and comparing problems, 
  where training data are paired features Xi and Xip,
  with labels yi in c(-1,1) for ranking and c(-1,0,1) for comparing.
-Suggests: ggplot2, directlabels, quadmod, kernlab
+Suggests: ggplot2, directlabels, quadmod
+Depends: kernlab
