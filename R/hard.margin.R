@@ -8,6 +8,7 @@ hardCompareLP <- structure(function
 (Pairs
 ### see \code{\link{check.pairs}}.
  ){
+  require(quadmod)
   check.pairs(Pairs)
   Di <- with(Pairs, Xip-Xi)
   N <- nrow(Di)
@@ -62,6 +63,7 @@ hardCompareLP <- structure(function
 ### optimal vector of p numeric weights, and if fit$margin is positive
 ### then the data are separable.
 },ex=function(){
+  require(quadmod)
   data(separable)
   sol <- hardCompareLP(separable)
   ## check to make sure we have perfect prediction.

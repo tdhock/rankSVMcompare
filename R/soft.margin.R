@@ -21,6 +21,7 @@ softCompareQP <- structure(function
  ...
 ### Passed to \code{\link{ksvm}}.
  ){
+  require(kernlab)
   if(is.character(kernel)){
     kernel <- get(kernel)
   }
@@ -212,7 +213,54 @@ softCompareQP <- structure(function
   ## Model selection:
   fit <- fits[[which.min(err.df$error)]]
   ## Out of sample prediction error:
-  with(sets$test, table(labels=yi, predictions=fit$predict(Xi,Xip)))
-  with(sets$test, FpFnInv(yi, fit$predict(Xi,Xip)))
+  test.yhat <- fit$predict(Xi,Xip)
+  with(sets$test, table(labels=yi, predictions=test.yhat))
+  with(sets$test, FpFnInv(yi, test.yhat))
   ## With this setup, we have no prediction error!
+
+  ## graph data.
+  if(FALSE){
+    data(graphs)
+    set.ids <- list(train=1:3,
+                    validation=4:5,
+                    test=6:7)
+    sets <- list()
+    for(set.name in names(set.ids)){
+      i <- set.ids[[set.name]]
+      L <- graphs[i]
+      sets[[set.name]] <-
+        list(Xi=do.call(rbind, lapply(L, "[[", "Xi")),
+             Xip=do.call(rbind, lapply(L, "[[", "Xip")),
+             yi=do.call(c, lapply(L, "[[", "yi")))
+    }
+    err.df <- data.frame()
+    model.i <- 1
+    fits <- list()
+    for(cost in 2^( (-5):5 )){
+      for(sigma in 2^( (-5):5 )){
+        cat(sprintf("model %4d sigma=%10f cost=%10f\n", model.i, sigma, cost))
+        fit <- softCompareQP(sets$train, kernel=rbfdot(sigma=sigma), C=cost)
+        fits[[model.i]] <- fit
+        yhat.vali <- with(sets$validation, fit$predict(Xi, Xip))
+        ## Error on the validation set used for model selection:
+        table(yhat.vali, sets$validation$yi)
+        err <- FpFnInv(yhat.vali, sets$validation$yi)
+        err.df <- rbind(err.df, data.frame(err, cost, sigma, model.i))
+        model.i <- model.i+1
+      }
+    }
+    ## Table and heatmap of validation error.
+    err.mat <- sapply(split(err.df, err.df$cost), "[[", "error")
+    print(err.mat)
+    heat <- ggplot(err.df, aes(log2(cost), log2(sigma)))+
+      geom_tile(aes(fill=error))
+    print(heat)
+    ## Model selection and test error.
+    best.i <- err.df[which.min(err.df$error),"model.i"]
+    fit <- fits[[best.i]]
+    test.pred <- with(sets$test, fit$predict(Xi, Xip))
+    table(labels=sets$test$yi, predictions=test.pred)
+    stats <- FpFnInv(sets$test$yi, test.pred)
+    with(stats, error/count) #proportion wrong = test error
+  }
 })

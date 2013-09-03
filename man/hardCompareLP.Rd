@@ -27,6 +27,7 @@ then the data are separable.}
 
 
 \examples{
+require(quadmod)
 data(separable)
 sol <- hardCompareLP(separable)
 ## check to make sure we have perfect prediction.
