@@ -2,6 +2,10 @@ TODO
 
 softRankQP interface to kernlab libsvm solver?
 
+2013.10.25
+
+FpFnInv reports number of true inequality and equality pairs.
+
 2013.9.3
 
 graphs data.

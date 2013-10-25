@@ -18,6 +18,8 @@ FpFnInv <- structure(function
              false.negative=fn,
              inversion=inv,
              error=err,
+             equality=sum(true==0),
+             inequality=sum(true!=0),
              count=length(true))
 ### data.frame with 1 row and 5 columns: false.positive,
 ### false.negative, inversion, error, count.
