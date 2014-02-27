@@ -1,7 +1,7 @@
 Package: rankSVMcompare
 Maintainer: Toby Dylan Hocking <toby@sg.cs.titech.ac.jp>
 Author: Toby Dylan Hocking
-Version: 2013.10.25
+Version: 2013.2.27
 License: GPL-3
 Title: Support vector machines for ranking and comparing
 Description: Solvers for ranking and comparing problems, 

@@ -53,7 +53,12 @@ softCompareQP <- structure(function
   res$check <- function(X){
     stopifnot(is.matrix(X))
     stopifnot(is.numeric(X))
-    stopifnot(train.names %in% colnames(X))
+    is.present <- train.names %in% colnames(X)
+    absent <- train.names[!is.present]
+    if(length(absent)){
+      absent.text <- paste(absent, collapse=", ")
+      stop("missing features ", absent.text)
+    }
     X[,train.names,drop=FALSE]
   }
   res$svm.f <- function(X){

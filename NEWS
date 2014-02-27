@@ -2,6 +2,16 @@ TODO
 
 softRankQP interface to kernlab libsvm solver?
 
+2013.2.27
+
+only check labels to be in c(-1, 0, 1), not being an integer.
+
+test for errors/valid inputs.
+
+filter zero variance variables.
+
+require colnames for input feature matrices.
+
 2013.10.25
 
 FpFnInv reports number of true inequality and equality pairs.

@@ -6,7 +6,6 @@
 ### difference between \eqn{x_i} and \eqn{x_i'}. \item \eqn{y_i=1}
 ### means that \eqn{x_i'} is better than \eqn{x_i}.}
 check.pairs <- function(Pairs){
-  stopifnot(is.integer(Pairs$yi))
   N <- length(Pairs$yi)
   stopifnot(Pairs$yi %in% c(-1,0,1))
   P <- ncol(Pairs$Xi)

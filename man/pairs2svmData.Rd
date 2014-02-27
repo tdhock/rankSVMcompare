@@ -28,8 +28,8 @@ creating an integer vector with elements in c(-1,1).}}
 
 
 \examples{
-p <- list(Xi=rbind(3,0,1),
-          Xip=rbind(0,-2,0),
+p <- list(Xi=cbind(var=c(3,0,1)),
+          Xip=cbind(var=c(0,-2,0)),
           yi=as.integer(c(-1,1,0)))
 result <- pairs2svmData(p)
 ## Inequality pairs such that yi=1 or -1 are mapped to 1, and
