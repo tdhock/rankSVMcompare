@@ -31,6 +31,10 @@ softCompareQP <- structure(function
   }
   stopifnot(is.kernel(kernel))
   res <- pairs2svmData(Pairs)
+  ## Because we remove zero-variance features before training,
+  ## features we actually use for training (train.names) may be fewer
+  ## than all the input features.
+  train.names <- colnames(res$Xi)
   res$kernel <- kernel
   X.all <- with(res, rbind(Xi, Xip))
   K2n <- kernelMatrix(kernel, X.all)
@@ -47,20 +51,21 @@ softCompareQP <- structure(function
   res$sv <- list(X=X.all[is.sv,],
                  a=res$primal[is.sv])
   res$check <- function(X){
-    stopifnot(ncol(X)==P)
     stopifnot(is.matrix(X))
     stopifnot(is.numeric(X))
+    stopifnot(train.names %in% colnames(X))
+    X[,train.names,drop=FALSE]
   }
   res$svm.f <- function(X){
-    res$check(X)
+    X <- res$check(X)
     kernelMult(kernel, X, res$sv$X, res$sv$a)-fit@b
   }
   res$rank.scaled <- function(X){
-    res$check(X)
+    X <- res$check(X)
     kernelMult(kernel, X, res$sv$X, res$sv$a/fit@b)
   }
   res$rank <- function(X){
-    res$check(X)
+    X <- res$check(X)
     X.sc <- scale(X, res$center, res$scale)
     res$rank.scaled(X.sc)
   }

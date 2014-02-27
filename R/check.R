@@ -7,13 +7,18 @@
 ### means that \eqn{x_i'} is better than \eqn{x_i}.}
 check.pairs <- function(Pairs){
   stopifnot(is.integer(Pairs$yi))
-  stopifnot(is.numeric(Pairs$Xi))
-  stopifnot(is.numeric(Pairs$Xip))
   N <- length(Pairs$yi)
   stopifnot(Pairs$yi %in% c(-1,0,1))
-  stopifnot(nrow(Pairs$Xi) == N)
-  stopifnot(nrow(Pairs$Xip) == N)
   P <- ncol(Pairs$Xi)
-  stopifnot(P == ncol(Pairs$Xip))
+  for(v.name in c("Xi", "Xip")){
+    mat <- Pairs[[v.name]]
+    stopifnot(is.matrix(mat))
+    stopifnot(is.numeric(mat))
+    stopifnot(nrow(mat) == N)
+    stopifnot(ncol(mat) == P)
+    if(is.null(colnames(mat))){
+      stop("input feature matrix columns must have names")
+    }
+  }
 ### Nothing.
 }
