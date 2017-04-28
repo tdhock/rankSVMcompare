@@ -1,0 +1,22 @@
+rankSVMcompare
+
+Support vector machines for ranking and comparing. https://arxiv.org/abs/1401.8008
+
+* a ranking function r(x) takes an object x and returns a real-valued rank score -- bigger is better. 
+* a comparison function c(x1, x2) takes two objects x1 and x2, and returns 
+  * 1 if x2 is significantly better,
+  * -1 if x1 is significantly better,
+  * 0 if there is no significant difference between x1 and x2.
+* in our model, an absolute rank difference greater than 1 is considered a significant difference.
+* the model is trained on labeled pairs (x1,x2,y) where x1 and x2 are p-dimensional feature vectors, and y is a label (-1, 0, 1).
+
+#+BEGIN_SRC R
+install.packages(c("devtools","kernlab","quadprog","lpSolveAPI",
+	           "ggplot2","directlabels"))
+install.packages("quadmod", repos="http://r-forge.r-project.org")
+library(devtools)
+install_github("rankSVMcompare", "tdhock")
+library(rankSVMcompare)
+example(softCompareQP)
+#+END_SRC
+
