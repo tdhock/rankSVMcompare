@@ -34,7 +34,7 @@ calc_AUC <-
                           i = 0)
     
     rankdiff_out <-
-      rankdiff(qp, test_matrix_Xi, test_matrix_Xi,t = 1)
+      rankdiff(qp, test_matrix_Xi, test_matrix_Xip,t = 1)
     rankdiff_out$difference <- abs(rankdiff_out$X2 - rankdiff_out$X1)
     
     tau_array <- c(abs(rankdiff_out$difference))
