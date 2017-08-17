@@ -8,7 +8,11 @@ notifications:
     on_failure: change
 
 before_install:
-  - R -e 'install.packages("quadprog")'
+  - R -e 'install.packages(c("quadprog", "lpSolveAPI"))'
+  - svn checkout svn://scm.r-forge.r-project.org/svnroot/quadmod/
+  - R CMD INSTALL quadmod/pkg
+
+not_used:
   - R -e 'install.packages("quadmod", repos="http://R-Forge.R-Project.org")'
 
   

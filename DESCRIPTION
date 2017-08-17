@@ -10,4 +10,4 @@ Description: Solvers for learning ranking and comparison functions,
  "Support vector comparison machines"
  <arXiv:1401:8008> by TD Hocking et al.
 Suggests: ggplot2, directlabels, testthat
-Imports: kernlab, quadmod
+Imports: kernlab, quadmod (>= 2017.08.17)
