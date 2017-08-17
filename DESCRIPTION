@@ -1,6 +1,6 @@
 Package: rankSVMcompare
 Maintainer: Toby Dylan Hocking <toby.hocking@r-project.org>
-Author: Toby Dylan Hocking
+Author: Toby Dylan Hocking, David Anthony Venuto
 Version: 2017.08.17
 License: GPL-3
 Title: Support Vector Machines for Ranking and Comparing

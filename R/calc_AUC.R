@@ -5,7 +5,7 @@ calc_AUC <-
            test_matrix_Xi,
            test_matrix_Xip,
            test_yi) {
-    rankdiff <- function(qp, matrix_Xi, matrix_Xip, t) {
+    rankdiff <- function(qp, matrix_Xi, matrix_Xip, tau) {
       Xirank <- qp$rank.scaled(X = matrix_Xi)
       Xiprank <- qp$rank.scaled(X = matrix_Xip)
       Xirank <- cbind(Xirank, Xiprank)
@@ -14,13 +14,13 @@ calc_AUC <-
       
       for (i in 1:nrow(Xirank)) {
         diff <- Xirank[i, 2] - Xirank[i, 1]
-        if (diff < -1 * t) {
+        if (diff < -1 * tau) {
           Xirank[i, 3] <- -1
         }
-        if (diff > t) {
+        if (diff > tau) {
           Xirank[i, 3] <- 1
         }
-        if (abs(diff) <= t) {
+        if (abs(diff) <= tau) {
           Xirank[i, 3] <- 0
         }
       }
@@ -33,7 +33,7 @@ calc_AUC <-
                           i = 0)
     
     rankdiff_out <-
-      rankdiff(qp, test_matrix_Xi, test_matrix_Xip,t = 1)
+      rankdiff(qp, test_matrix_Xi, test_matrix_Xip,tau = 1)
     rankdiff_out$difference <- abs(rankdiff_out$X2 - rankdiff_out$X1)
     
     tau_array <- c(abs(rankdiff_out$difference))
@@ -78,11 +78,11 @@ calc_AUC <-
     out_AUC_SVM <- out_AUC_SVM[order(out_AUC_SVM$TP), ]
     AUC <-
       data.frame(TYPE = "TEST",
-                 AUC = trapz(x = out_AUC_SVM$TP, y = out_AUC_SVM$FP))
+                 AUC = caTools::trapz(x = out_AUC_SVM$TP, y = out_AUC_SVM$FP))
     AUC_baseline <- AUC_baseline[order(AUC_baseline$TP), ]
     Baseline_AUC <-
       data.frame(TYPE = "BASELINE",
-                 AUC = trapz(x = AUC_baseline$TP, y = AUC_baseline$FP))
+                 AUC = caTools::trapz(x = AUC_baseline$TP, y = AUC_baseline$FP))
     AUC_list <- rbind(AUC_list, AUC)
     AUC_list <- rbind(AUC_list, Baseline_AUC)
     AUC_list <- AUC_list[-1, ]
