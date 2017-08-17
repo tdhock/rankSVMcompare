@@ -6,12 +6,11 @@ calc_AUC <-
            test_matrix_Xip,
            test_yi) {
     rankdiff <- function(qp, matrix_Xi, matrix_Xip, t) {
-      Xirank <- qp$rank(X = matrix_Xi)
-      Xiprank <- qp$rank(X = matrix_Xip)
+      Xirank <- qp$rank.scaled(X = matrix_Xi)
+      Xiprank <- qp$rank.scaled(X = matrix_Xip)
       Xirank <- cbind(Xirank, Xiprank)
       
       Xirank <- data.frame(Xirank)
-      Xirank$diff <- 0
       
       for (i in 1:nrow(Xirank)) {
         diff <- Xirank[i, 2] - Xirank[i, 1]
@@ -44,7 +43,7 @@ calc_AUC <-
     for (i in tau_array) {
       rankdiff_out <-
         rankdiff(qp, test_matrix_Xi, test_matrix_Xip, i)
-      
+      colnames(rankdiff_out)[3] <- "diff"
       rankdiff_out <- cbind(rankdiff_out, test_yi)
       colnames(rankdiff_out)[4] <- "test_yi"
       rankdiff_out$TP <- 0
