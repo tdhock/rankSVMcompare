@@ -1,0 +1,12 @@
+language: r
+
+sudo: required
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+
+install:
+  - R -e 'install.packages("quadmod", repos="http://R-Forge.R-Project.org")'
+  

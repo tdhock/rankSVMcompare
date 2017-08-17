@@ -43,7 +43,9 @@ are separable.}
 
 
 \examples{
-data(separable)
+
+library(rankSVMcompare)
+data(separable, envir=environment())
 sol <- hardCompareQP(separable)
 ## check to make sure we have perfect prediction.
 y.hat <- with(separable, sol$predict(Xi, Xip))
@@ -80,4 +82,5 @@ scale_linetype_manual(values=c(decision="solid",margin="dotted"))+
 ggtitle(paste("Hard margin linear kernel comparison model",
               "support vectors in black",sep="\n"))
 print(svplot)
+
 }

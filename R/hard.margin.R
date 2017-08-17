@@ -8,12 +8,11 @@ hardCompareLP <- structure(function
 (Pairs
 ### see \code{\link{check.pairs}}.
  ){
-  require(quadmod)
   check.pairs(Pairs)
   Di <- with(Pairs, Xip-Xi)
   N <- nrow(Di)
   P <- ncol(Di)
-  vars <- make.ids(margin=1, weight=P)
+  vars <- quadmod::make.ids(margin=1, weight=P)
   constraints <- list()
   for(i in 1:N){
     if(Pairs$yi[i] == 0){
@@ -34,7 +33,7 @@ hardCompareLP <- structure(function
   n.vars <- length(unlist(vars))
   d <- rep(0, n.vars)
   d[vars$margin] <- 1
-  result <- run.lpSolveAPI(vars, d, constraints)
+  result <- quadmod::run.lpSolveAPI(vars, d, constraints)
   result$check <- function(X){
     stopifnot(ncol(X)==P)
     stopifnot(is.matrix(X))
@@ -63,7 +62,9 @@ hardCompareLP <- structure(function
 ### optimal vector of p numeric weights, and if fit$margin is positive
 ### then the data are separable.
 },ex=function(){
-  data(separable)
+
+  library(rankSVMcompare)
+  data(separable, envir=environment())
   sol <- hardCompareLP(separable)
   ## check to make sure we have perfect prediction.
   y.hat <- with(separable, sol$predict(Xi, Xip))
@@ -107,6 +108,7 @@ hardCompareLP <- structure(function
                    linetype=line),data=seg.df)+
   scale_linetype_manual(values=c(decision="solid",margin="dotted"))
   print(comparePlot)
+  
 })
 
 hardCompareQP <- structure(function
@@ -135,7 +137,6 @@ hardCompareQP <- structure(function
 ### Optimal coefficients \eqn{\alpha_i} with absolute value greater
 ### than this value are considered support vectors.
  ){
-  require(quadmod)
   svmData <- pairs2svmData(Pairs)
   sigma <- svmData$scale
   X <- with(svmData, Xip-Xi)
@@ -147,12 +148,12 @@ hardCompareQP <- structure(function
   K <- X %*% t(X)
   diag(K) <- diag(K) + add.to.diag
   ## Construct the QP constraints using the quadmod modeling language.
-  vars <- make.ids(alpha=N)
+  vars <- quadmod::make.ids(alpha=N)
   constraints <-
     c(vars$alpha[]*y >= 0,
       list(sum(vars$alpha) == 0))
   ## Fit the linear kernel hard margin SVM using a QP solver.
-  sol <- run.quadprog(vars, K, y, constraints)
+  sol <- quadmod::run.quadprog(vars, K, y, constraints)
   sol$sigma <- sigma
   is.sv <- abs(sol$alpha) > sv.threshold
   a.sv <- sol$alpha[is.sv]
@@ -194,7 +195,9 @@ hardCompareQP <- structure(function
 ### the original space), and if fit$margin is positive than the data
 ### are separable.
 },ex=function(){
-  data(separable)
+
+  library(rankSVMcompare)
+  data(separable, envir=environment())
   sol <- hardCompareQP(separable)
   ## check to make sure we have perfect prediction.
   y.hat <- with(separable, sol$predict(Xi, Xip))
@@ -231,6 +234,7 @@ hardCompareQP <- structure(function
   ggtitle(paste("Hard margin linear kernel comparison model",
                 "support vectors in black",sep="\n"))
   print(svplot)
+  
 })
 
 

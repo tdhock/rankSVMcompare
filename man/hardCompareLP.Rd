@@ -27,7 +27,9 @@ then the data are separable.}
 
 
 \examples{
-data(separable)
+
+library(rankSVMcompare)
+data(separable, envir=environment())
 sol <- hardCompareLP(separable)
 ## check to make sure we have perfect prediction.
 y.hat <- with(separable, sol$predict(Xi, Xip))
@@ -71,4 +73,5 @@ geom_segment(aes(distance1,angle1,xend=distance2,yend=angle2,
                  linetype=line),data=seg.df)+
 scale_linetype_manual(values=c(decision="solid",margin="dotted"))
 print(comparePlot)
+
 }

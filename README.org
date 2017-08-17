@@ -1,28 +1,38 @@
-rankSVMcompare
+rankSVMcompare: an R package which implements Support Vector Machines
+for ranking and comparing. https://arxiv.org/abs/1401.8008
 
-Support vector machines for ranking and comparing. https://arxiv.org/abs/1401.8008
-
-- a ranking function r(x) takes an object x and returns a real-valued rank score -- bigger is better. 
-- a comparison function c(x1, x2) takes two objects x1 and x2, and returns 
-  - 1 if x2 is significantly better,
-  - -1 if x1 is significantly better,
-  - 0 if there is no significant difference between x1 and x2.
-- in our model, an absolute rank difference greater than 1 is considered a significant difference.
-- the model is trained on labeled pairs (x1,x2,y) where x1 and x2 are p-dimensional feature vectors, and y is a label (-1, 0, 1).
+[[https://travis-ci.org/tdhock/rankSVMcompare][https://travis-ci.org/tdhock/rankSVMcompare.png?branch=master]]
 
 ** Installation
 
 #+BEGIN_SRC R
-install.packages(c("devtools","kernlab","quadprog","lpSolveAPI",
-	           "ggplot2","directlabels"))
 install.packages("quadmod", repos="http://r-forge.r-project.org")
-devtools::install_github("rankSVMcompare", "tdhock")
+devtools::install_github("tdhock/rankSVMcompare")
 #+END_SRC
 
 ** Usage examples
 
+The main function for fitting the Support Vector Machine
+ranking/comparison model is softCompareQP.
+
 #+BEGIN_SRC R
-library(rankSVMcompare)
-example(softCompareQP)
+  library(rankSVMcompare)
+  example(softCompareQP)
 #+END_SRC
+
+The softCompareQP function returns a list which represents the trained
+model. If =fit= is the trained model object, then
+
+- =fit$rank= is a ranking function r(x) that takes an object x and
+  returns a real-valued rank score -- bigger is better.
+- =fit$predict= is a comparison function c(x1, x2) that takes two
+  objects x1 and x2, and returns
+  - 1 if x2 is significantly better,
+  - -1 if x1 is significantly better,
+  - 0 if there is no significant difference between x1 and x2.
+- in our model, an absolute rank difference greater than 1 is
+  considered a significant difference.
+- the model is trained on labeled pairs (x1,x2,y) where x1 and x2 are
+  p-dimensional feature vectors, and y is a label (-1, 0, 1).
+
 

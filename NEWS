@@ -2,6 +2,10 @@ TODO
 
 softRankQP interface to kernlab libsvm solver?
 
+2017.08.17
+
+reformat docs, setup travis, convert tests to testthat.
+
 2014.2.27
 
 only check labels to be in c(-1, 0, 1), not being an integer.

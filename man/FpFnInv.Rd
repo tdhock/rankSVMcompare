@@ -19,12 +19,14 @@ false.negative, inversion, error, count.}
 
 
 \examples{
+
 values <- c(-1,0,1)
 x <- expand.grid(true=values, pred=values)
-err <- FpFnInv(x$true, x$pred)
+(err <- FpFnInv(x$true, x$pred))
 stopifnot(err$err == 6)
 stopifnot(err$false.positive == 2)
 stopifnot(err$false.negative == 2)
 stopifnot(err$inversion == 2)
 stopifnot(err$count == nrow(x))
+
 }

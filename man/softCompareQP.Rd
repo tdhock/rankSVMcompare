@@ -41,7 +41,9 @@ values of the ranking function r(x).}
 
 
 \examples{
-data(separable,package="rankSVMcompare")
+
+library(rankSVMcompare)
+data(separable, envir=environment())
 ## Add some noise to create a data set which is not separable.
 not <- separable
 set.seed(1)
@@ -62,6 +64,7 @@ arrowPlot <- ggplot(,aes(distance, angle))+
   theme_bw()+
   theme(panel.margin=unit(0,"cm"))
 print(arrowPlot)
+
 g.size <- 20
 d <- with(arrow.df, range(c(distance, distance.1)))
 a <- with(arrow.df, range(c(angle, angle.1)))
@@ -105,6 +108,7 @@ arrowContour <- arrowPlot+
           data=unscaledGrid, method="bottom.pieces", stat="contour")+
   facet_grid(cost~yi)
 print(arrowContour)
+
 ## Since we learned a linear comparison model we can also interpret
 ## the model in the difference space.
 brks <- c(-2,-1,0,1,2)
@@ -115,20 +119,18 @@ diffPlot <- ggplot()+
   geom_dl(aes(distance, angle, z=value, label=..level..), colour="grey",
           data=scaledGrid, method="bottom.pieces",
           breaks=brks, stat="contour")+
-  ## geom_segment(aes(distance1,angle1,xend=distance2,yend=angle2,
-  ##                  linetype=line),data=seg.df)+
   geom_point(aes(distance, angle, shape=sv.type), data=sv.df,size=5)+
   scale_linetype_manual(values=c(margin="dashed",decision="solid"))+
   scale_shape_manual(values=c(margin=13,slack=3))+
-  facet_grid(fun.name~cost,labeller=function(var, val){
-    if(var=="cost"){
-      sprintf("C = \%s",as.character(val))
-    }else as.character(val)
+  facet_grid(fun.name~cost,labeller=function(df){
+    df$cost <- paste0("C = ", df$cost)
+    df
   })+
   theme_bw()+
   theme(panel.margin=unit(0,"cm"))+
   ggtitle("Support vector comparison model (grey level lines)")
 print(diffPlot)
+
 ## Fit soft-margin non-linear comparison models for some cost and
 ## kernel width parameters.
 fold <- sample(rep(1:4, l=nrow(not$Xi)))
@@ -144,7 +146,7 @@ model.i <- 1
 fits <- list()
 for(cost in c(0.1, 10)){
   for(sigma in c(1/4, 4)){
-    fit <- softCompareQP(sets$train, kernel=rbfdot(sigma), C=cost)
+    fit <- softCompareQP(sets$train, kernel=kernlab::rbfdot(sigma), C=cost)
     fits[[model.i]] <- fit
     yhat.vali <- with(sets$validation, fit$predict(Xi, Xip))
     ## Error on the validation set used for model selection:
@@ -161,13 +163,12 @@ nonlinear <- arrowPlot+
                data=grid.df, colour="grey")+
   geom_dl(aes(distance, angle, z=f, label=..level..), colour="grey",
           data=grid.df, method="bottom.pieces", stat="contour")+
-  facet_grid(model.i~yi,labeller=function(var, val){
-    sprintf("\%s = \%s",var,as.character(val))
-  })+
+  facet_grid(model.i~yi,labeller=label_both)+
   theme_bw()+
   theme(panel.margin=unit(0,"cm"))+
   ggtitle("Support vector comparison model (grey level curves)")
 print(nonlinear)
+
 ## Model selection:
 fit <- fits[[which.min(err.df$error)]]
 ## Out of sample prediction error:
@@ -176,49 +177,4 @@ with(sets$test, table(labels=yi, predictions=test.yhat))
 with(sets$test, FpFnInv(yi, test.yhat))
 ## With this setup, we have no prediction error!
 
-## graph data.
-if(FALSE){
-  data(graphs)
-  set.ids <- list(train=1:3,
-                  validation=4:5,
-                  test=6:7)
-  sets <- list()
-  for(set.name in names(set.ids)){
-    i <- set.ids[[set.name]]
-    L <- graphs[i]
-    sets[[set.name]] <-
-      list(Xi=do.call(rbind, lapply(L, "[[", "Xi")),
-           Xip=do.call(rbind, lapply(L, "[[", "Xip")),
-           yi=do.call(c, lapply(L, "[[", "yi")))
-  }
-  err.df <- data.frame()
-  model.i <- 1
-  fits <- list()
-  for(cost in 2^( (-5):5 )){
-    for(sigma in 2^( (-5):5 )){
-      cat(sprintf("model \%4d sigma=\%10f cost=\%10f\n", model.i, sigma, cost))
-      fit <- softCompareQP(sets$train, kernel=rbfdot(sigma=sigma), C=cost)
-      fits[[model.i]] <- fit
-      yhat.vali <- with(sets$validation, fit$predict(Xi, Xip))
-      ## Error on the validation set used for model selection:
-      table(yhat.vali, sets$validation$yi)
-      err <- FpFnInv(yhat.vali, sets$validation$yi)
-      err.df <- rbind(err.df, data.frame(err, cost, sigma, model.i))
-      model.i <- model.i+1
-    }
-  }
-  ## Table and heatmap of validation error.
-  err.mat <- sapply(split(err.df, err.df$cost), "[[", "error")
-  print(err.mat)
-  heat <- ggplot(err.df, aes(log2(cost), log2(sigma)))+
-    geom_tile(aes(fill=error))
-  print(heat)
-  ## Model selection and test error.
-  best.i <- err.df[which.min(err.df$error),"model.i"]
-  fit <- fits[[best.i]]
-  test.pred <- with(sets$test, fit$predict(Xi, Xip))
-  table(labels=sets$test$yi, predictions=test.pred)
-  stats <- FpFnInv(sets$test$yi, test.pred)
-  with(stats, error/count) #proportion wrong = test error
-}
 }
