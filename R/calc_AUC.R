@@ -77,7 +77,7 @@ calc_AUC <-
       data.frame(TP = c(length(yi[yi$matches.RESULT == -1, ]) / (length(yi[yi$matches.RESULT ==
                                                                              -1, ]) + length(yi[yi$matches.RESULT == 1, ])), 0), FP = c(1, 0 / length(yi[yi$matches.RESULT ==
                                                                                                                                                            0, ])))
-    out_AUC_SVM <- out_AUC_SVM[order(out_AUC_SVM$TP), ]
+    out_AUC_SVM <- out_AUC_SVM[order(out_AUC_SVM$FP,out_AUC_SVM$TP), ]
     AUC <-
       data.frame(TYPE = "TEST",
                  AUC = caTools::trapz(x = out_AUC_SVM$TP, y = out_AUC_SVM$FP))

@@ -94,8 +94,13 @@ compute_AUC_andELO <- function(train, test) {
   out_AUC <- do.call(rbind, out_AUC) 
   out_AUC$tau <- NULL
     
-  out_AUC <- out_AUC[order(out_AUC$TP),]
+  out_AUC <- out_AUC[order(out_AUC$FP,out_AUC$TP),]
   AUC <- data.frame(TYPE="ELO",AUC=caTools::trapz(out_AUC$TP,out_AUC$FP))
+  
+  AUC_calc <- 0
+  for (i in 1:(nrow(out_AUC)-1)){
+    AUC_calc <- AUC_calc + (out_AUC$FP[i+1] - out_AUC$FP[i])*out_AUC$TP[i]
+  }
   
   return_list <- list("AUC"=AUC,"ROC"=out_AUC)
   return(return_list)
