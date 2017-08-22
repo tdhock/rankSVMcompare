@@ -1,4 +1,4 @@
-rankdiff <- function(qp, matrix_Xi, matrix_Xip, tau) {
+rankdiff <- function(qp, matrix_Xi, matrix_Xip) {
 
   #Computes the rankdiff given rsvm objects  
 
