@@ -1,42 +1,12 @@
 require(caTools)
 
 calc_AUC <-
-  function(qp,
-           test_matrix_Xi,
-           test_matrix_Xip,
+  function(Xirank,
            test_yi) {
-    rankdiff <- function(qp, matrix_Xi, matrix_Xip, tau) {
-      Xirank <- qp$rank.scaled(X = matrix_Xi)
-      Xiprank <- qp$rank.scaled(X = matrix_Xip)
-      Xirank <- cbind(Xirank, Xiprank)
-      
-      Xirank <- data.frame(Xirank)
-      
-      for (i in 1:nrow(Xirank)) {
-        diff <- Xirank[i, 2] - Xirank[i, 1]
-        if (diff < -1 * tau) {
-          Xirank[i, 3] <- -1
-        }
-        if (diff > tau) {
-          Xirank[i, 3] <- 1
-        }
-        if (abs(diff) <= tau) {
-          Xirank[i, 3] <- 0
-        }
-      }
-      return(Xirank)
-    }
+
+    #Computers AUC for modified confusion matrix gives rankdifference matrix and actual outcomes
     
-    out_AUC <- data.frame(tau = 0,
-                          TP = 0,
-                          FP = 0,
-                          i = 0)
-    
-    rankdiff_out <-
-      rankdiff(qp, test_matrix_Xi, test_matrix_Xip,tau = 1)
-    rankdiff_out$difference <- abs(rankdiff_out$X2 - rankdiff_out$X1)
-    
-    tau_array <- c(abs(rankdiff_out$difference))
+    tau_array <- c(abs(Xirank$difference))
     
     out_AUC_SVM_list  <- list()
     
@@ -44,23 +14,23 @@ calc_AUC <-
     
     for (i in tau_array) {
       rankdiff_out <-
-        rankdiff(qp, test_matrix_Xi, test_matrix_Xip, i)
-      colnames(rankdiff_out)[3] <- "diff"
+        prediction_rankdiff(Xirank, i)
+      colnames(rankdiff_out)[4] <- "diff"
       rankdiff_out <- cbind(rankdiff_out, test_yi)
-      colnames(rankdiff_out)[4] <- "test_yi"
+      colnames(rankdiff_out)[5] <- "test_yi"
       rankdiff_out$TP <- 0
       rankdiff_out$FP <- 0
       
       #TP
       rankdiff_out[rankdiff_out$diff == rankdiff_out$test_yi &
-                     rankdiff_out$test_yi == -1, 5] <- 1
+                     rankdiff_out$test_yi == -1, 6] <- 1
       rankdiff_out[rankdiff_out$diff == rankdiff_out$diff &
-                     rankdiff_out$test_yi == 1, 5] <- 1
-      
+                     rankdiff_out$test_yi == 1, 6] <- 1
+      #FP
       rankdiff_out[rankdiff_out$diff == -1 &
-                     rankdiff_out$test_yi == 0 , 6] <- 1
+                     rankdiff_out$test_yi == 0 , 7] <- 1
       rankdiff_out[rankdiff_out$diff == 1 &
-                     rankdiff_out$test_yi == 0 , 6] <- 1
+                     rankdiff_out$test_yi == 0 , 7] <- 1
       
       TP = nrow(rankdiff_out[rankdiff_out$TP == 1,]) / (nrow(rankdiff_out[rankdiff_out$test_yi == 1,]) + nrow(rankdiff_out[rankdiff_out$test_yi == -1,]))
       FP = nrow(rankdiff_out[rankdiff_out$FP == 1,]) / (nrow(rankdiff_out[rankdiff_out$test_yi == 0,]))
