@@ -107,6 +107,9 @@ rankSVM_CV <-
         }
       }
     }
+    else{
+      return(-1)
+    }
     store_AUC <- do.call(rbind, store_AUC)
     return(store_AUC)
   }
