@@ -1,9 +1,7 @@
 rankSVM_CV <-
   function(Xi_train,
            Xip_train,
-           test,
            train_yi,
-           test_yi,
            C_vector,
            kern,
            sigma_vector) {
