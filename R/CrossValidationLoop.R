@@ -16,7 +16,7 @@ rankSVM_CV <-
       splits_test <- c(1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 6)
       for (i in 1:length(C_vector)) {
         for (j in 1:length(splits_test)) {
-          Xi_train_run <- Xi_train[1:(as.integer((nrow(Xi_train) * splits_train[j])), ]
+          Xi_train_run <- Xi_train[1:(as.integer(nrow(Xi_train) * splits_train[j])), ]
           Xi_test_run <-
             Xi_train[(as.integer(nrow(Xi_train) * splits_train[j] + 1)):(nrow(Xi_train)), ]
           
@@ -64,7 +64,7 @@ rankSVM_CV <-
         for (i in 1:length(C_vector)) {
           for (j in 1:length(splits_test)) {
             
-          Xi_train_run <- Xi_train[1:(as.integer((nrow(Xi_train) * splits_train[j])), ]
+          Xi_train_run <- Xi_train[1:(as.integer(nrow(Xi_train) * splits_train[j])), ]
           Xi_test_run <-
             Xi_train[(as.integer(nrow(Xi_train) * splits_train[j] + 1)):(nrow(Xi_train)), ]
           
