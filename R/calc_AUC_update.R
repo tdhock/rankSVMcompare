@@ -5,8 +5,7 @@ trapz <- function (x, y)
 }
 
 calc_AUC <- function(rankdiff_vector,labls){
-  TPR <- compute_TP_threshold(rankdiff_vector,labls)
-  FPR <- compute_FP_threshold(rankdiff_vector,labls)
-  AUC <- trapz(x=FPR$FPR,y=TPR$TPR)
+  ROC <- compute_threshold(rankdiff_vector,labls)
+  AUC <- trapz(x=ROC$FPR,y=ROC$TPR)
   return(AUC)
 }
