@@ -1,7 +1,7 @@
 compute_FP_threshold <- function(rankdiff_vector,labls){
   rd<- data.table(diff=rankdiff_vector, label=labls)
   rd[, abs.diff := abs(diff)]
-  rd[order(-abs.diff)]
+  rd[order(abs.diff)]
   rd[, FP := cumsum(label==0)]
   rd[, FPR := FP / sum(label != 0)]
   return(rd)
