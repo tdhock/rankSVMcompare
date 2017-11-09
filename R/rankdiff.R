@@ -1,7 +1,6 @@
-rankdiff <- function(qp, matrix_Xi, matrix_Xip, t) {
-  Xirank <- qp$rank(X = matrix_Xi)
-  Xiprank <- qp$rank(X = matrix_Xip)
-  Xirank <- cbind(Xirank, Xiprank)
+rankdiff <- function(rank, rank_p, t) {
+
+  Xirank <- cbind(rank, rank_p)
   
   Xirank <- data.frame(Xirank)
   Xirank$diff <- Xirank[, 2] - Xirank[, 1]
